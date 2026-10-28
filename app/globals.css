@@ -1,0 +1,64 @@
+@import 'tailwindcss';
+@import 'tw-animate-css';
+@import 'shadcn/tailwind.css';
+
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-destructive: var(--destructive);
+  --radius-lg: 0.75rem;
+  --radius-md: 0.625rem;
+  --radius-sm: 0.45rem;
+}
+
+:root { color-scheme: light; --background: oklch(0.98 0.008 225); --foreground: oklch(0.22 0.035 235); --card: oklch(1 0 0); --card-foreground: oklch(0.22 0.035 235); --primary: oklch(0.43 0.11 225); --primary-foreground: oklch(1 0 0); --secondary: oklch(0.95 0.02 220); --secondary-foreground: oklch(0.3 0.04 225); --muted: oklch(0.95 0.015 220); --muted-foreground: oklch(0.52 0.035 225); --accent: oklch(0.95 0.02 220); --accent-foreground: oklch(0.3 0.04 225); --destructive: oklch(0.62 0.2 25); --border: oklch(0.91 0.025 220); --input: oklch(0.91 0.025 220); --ring: oklch(0.62 0.12 220); }
+
+* { @apply border-border outline-ring/50; }
+body { @apply bg-background text-foreground; }
+button, a { -webkit-tap-highlight-color: transparent; }
+
+.panel { border: 1px solid #dfe8ef; border-radius: 14px; background: white; box-shadow: 0 3px 16px rgba(35, 76, 104, 0.045); }
+.stat-card { min-height: 158px; border: 1px solid; border-radius: 14px; padding: 18px 20px; transition: transform .2s ease, box-shadow .2s ease; }
+.stat-card:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(43, 96, 124, .09); }
+.stat-icon { display: grid; place-items: center; width: 34px; height: 34px; border-radius: 10px; }
+.stat-icon svg { width: 17px; }
+.tab-button { border-radius: 6px; padding: 7px 10px; color: #7c8c9b; font-size: 12px; font-weight: 600; }
+.tab-button span { margin-left: 4px; color: #a2afba; }
+.tab-active { background: white; color: #1d4861; box-shadow: 0 1px 4px rgba(32, 71, 94, .1); }
+.tab-active span { color: #0c7398; }
+.appointment-row { display: flex; align-items: flex-start; gap: 16px; padding: 18px 20px; transition: background .2s ease; }
+.appointment-row:hover { background: #fbfdfe; }
+.appointment-cancelled { background: #fffdf7; }
+.time-block { width: 51px; flex: 0 0 51px; padding-top: 1px; text-align: center; }
+.time-block strong { display: block; font-size: 14px; color: #27445a; }
+.time-block span { font-size: 10px; font-weight: 700; color: #9aabb8; }
+.status-badge, .risk-label { display: inline-flex; align-items: center; gap: 4px; border-radius: 999px; padding: 3px 7px; font-size: 10px; font-weight: 700; }
+.status-badge svg { width: 12px; }
+.status-pending { background: #fff6dc; color: #a27521; }
+.status-confirmed { background: #e8f7f0; color: #2b8a67; }
+.status-cancelled { background: #fff0f0; color: #c84d4d; }
+.whatsapp-button, .treatment-action { display: inline-flex; align-items: center; gap: 5px; border-radius: 7px; border: 1px solid #bfe3d4; background: #f2fbf7; padding: 6px 8px; font-size: 11px; font-weight: 600; color: #268362; white-space: nowrap; }
+.whatsapp-button svg, .treatment-action svg { width: 14px; }
+.patient-avatar { display: grid; place-items: center; width: 31px; height: 31px; flex: 0 0 31px; border-radius: 9px; background: #e6f3f7; color: #28718e; font-size: 10px; font-weight: 700; }
+.avatar-risk { background: #fde9e9; color: #bd5757; }
+.treatment-row { border-bottom: 1px solid #edf1f4; padding: 16px 20px; }
+.treatment-row:last-child { border-bottom: 0; }
+.treatment-risk { background: #fffafa; }
+.risk-label { background: #fbe2e2; color: #c24c4c; }
+.treatment-action { margin-top: 12px; width: 100%; justify-content: center; border-color: #f2cccc; background: #fff3f3; color: #bd4848; }
+.toast { position: fixed; bottom: 24px; left: 50%; z-index: 10; display: flex; transform: translateX(-50%); align-items: center; gap: 8px; border: 1px solid #bfe0d1; border-radius: 9px; background: white; padding: 11px 16px; box-shadow: 0 8px 25px rgba(27, 75, 100, .14); color: #287f62; font-size: 13px; font-weight: 600; }
+.toast svg { width: 16px; }
+@media (max-width: 640px) { .appointment-row { flex-wrap: wrap; gap: 10px; } .appointment-row > :last-child { margin-left: 67px; } .whatsapp-button { font-size: 10px; } }
