@@ -85,7 +85,32 @@ Herramienta operativa enfocada en dos problemas críticos:
 
 ---
 
-## 4. Criterios de Aceptación Técnicos y Verificación
+## 4. HU-04: Ergonomía visual y accesibilidad en mostrador
+**Como** asistente dental
+**Quiero** distinguir rápidamente acciones prioritarias y estados de agenda sin fatiga visual
+**Para** operar la jornada matutina con precisión en listas largas.
+
+- **Escenario 1: Acción de WhatsApp prioritaria**
+  - **Given** un paciente en riesgo de abandono.
+  - **When** visualizo su tarjeta de seguimiento.
+  - **Then** el botón de WhatsApp usa el verde oficial sólido `#25D366`, icono y texto blancos, y un hover `#20ba5a`.
+
+- **Escenario 2: Riesgo clínico legible**
+  - **Given** una lista con varios tratamientos en riesgo.
+  - **When** reviso el panel de seguimiento.
+  - **Then** cada tarjeta permanece blanca y usa un acento izquierdo `border-l-4 border-l-rose-500`, sin rellenar toda la tarjeta de rojo.
+
+- **Escenario 3: Hueco libre distinguible**
+  - **Given** una cita cancelada.
+  - **When** reviso la agenda.
+  - **Then** la fila aparece con borde punteado y fondo ámbar tenue, y el botón “Asignar paciente en espera” tiene alta jerarquía visual.
+
+- **Escenario 4: Fecha operativa actual**
+  - **Given** que abro el panel cualquier día.
+  - **When** consulto el encabezado.
+  - **Then** la fecha mostrada corresponde al día actual y está formateada en español.
+
+## 5. Criterios de Aceptación Técnicos y Verificación
 1. **Zero Console Errors:** La aplicación debe compilar con `pnpm build` sin fallos de TypeScript ni hydration mismatches.
 2. **Interactividad Local:** Las acciones de confirmar cita, cancelar cita y filtrar por fecha (Hoy / Mañana) deben actualizar el DOM al instante sin recarga de página.
 3. **Responsive:** Vista adaptable a pantallas de escritorio y tablets de mostrador.
