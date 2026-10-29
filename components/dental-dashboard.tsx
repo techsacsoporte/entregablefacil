@@ -28,6 +28,7 @@ type AppointmentStatus = 'Pendiente' | 'Confirmada' | 'Cancelada'
 type Appointment = { id: number; time: string; period: string; name: string; phone: string; type: string; detail: string; status: AppointmentStatus; day: 'Hoy' | 'Mañana' }
 
 type Treatment = { id: number; name: string; phone: string; treatment: string; progress: string; completed: number; total: number; lastVisit: string; frequency: string; risk: boolean; next: string }
+type WaitlistPatient = { id: number; name: string; phone: string; treatment: string; reason: string }
 
 const initialAppointments: Appointment[] = [
   { id: 1, time: '09:00', period: 'AM', name: 'Mariana López', phone: '+52 55 1842 9301', type: 'Limpieza dental', detail: 'Primera visita', status: 'Confirmada', day: 'Hoy' },
@@ -38,6 +39,12 @@ const initialAppointments: Appointment[] = [
   { id: 6, time: '11:00', period: 'AM', name: 'Jorge Castillo', phone: '+52 55 3620 4408', type: 'Limpieza dental', detail: 'Control semestral', status: 'Confirmada', day: 'Mañana' },
   { id: 7, time: '13:00', period: 'PM', name: 'Lucía Torres', phone: '+52 55 8091 3372', type: 'Rehabilitación', detail: 'Sesión 3 de 5', status: 'Pendiente', day: 'Mañana' },
   { id: 8, time: '17:30', period: 'PM', name: 'Andrés Molina', phone: '+52 55 2270 6193', type: 'Ortodoncia', detail: 'Ajuste mensual', status: 'Pendiente', day: 'Mañana' },
+]
+
+const waitlist: WaitlistPatient[] = [
+  { id: 1, name: 'Natalia Paredes', phone: '+52 55 4102 8831', treatment: 'Limpieza dental', reason: 'Solicitó cita anticipada' },
+  { id: 2, name: 'Mateo Ruiz', phone: '+52 55 2750 1940', treatment: 'Endodoncia', reason: 'Tratamiento pendiente' },
+  { id: 3, name: 'Fernanda Soto', phone: '+52 55 8301 6624', treatment: 'Ortodoncia', reason: 'Ajuste pendiente' },
 ]
 
 const treatments: Treatment[] = [
@@ -60,6 +67,7 @@ export function DentalDashboard() {
   const [search, setSearch] = useState('')
   const [synced, setSynced] = useState(false)
   const [toast, setToast] = useState('')
+  const [replacementFor, setReplacementFor] = useState<number | null>(null)
 
   const filteredAppointments = appointments.filter((item) => item.day === activeDay)
   const pendingTomorrow = appointments.filter((item) => item.day === 'Mañana' && item.status === 'Pendiente').length
@@ -76,6 +84,13 @@ export function DentalDashboard() {
   function syncCalendar() {
     setSynced(true)
     setToast('Google Calendar sincronizado · 8 citas actualizadas')
+    window.setTimeout(() => setToast(''), 2800)
+  }
+
+  function assignReplacement(appointmentId: number, patient: WaitlistPatient) {
+    setAppointments((current) => current.map((item) => item.id === appointmentId ? { ...item, name: patient.name, phone: patient.phone, type: patient.treatment, detail: 'Reemplazo desde lista de espera', status: 'Confirmada' } : item))
+    setReplacementFor(null)
+    setToast(`${patient.name} asignado/a al hueco · cita confirmada`)
     window.setTimeout(() => setToast(''), 2800)
   }
 
@@ -108,7 +123,7 @@ export function DentalDashboard() {
             <div className="flex flex-col gap-4 border-b border-[#e6edf2] px-5 py-5 sm:flex-row sm:items-center sm:justify-between"><div><h2 className="text-lg font-semibold text-[#19344b]">Confirmación de agenda</h2><p className="mt-1 text-sm text-[#7b8b9b]">Envía recordatorios y actualiza estados en un clic.</p></div><div className="flex rounded-lg bg-[#f1f5f8] p-1"><button onClick={() => setActiveDay('Hoy')} className={`tab-button ${activeDay === 'Hoy' ? 'tab-active' : ''}`}>Hoy <span>{appointments.filter(a => a.day === 'Hoy').length}</span></button><button onClick={() => setActiveDay('Mañana')} className={`tab-button ${activeDay === 'Mañana' ? 'tab-active' : ''}`}>Mañana <span>{appointments.filter(a => a.day === 'Mañana').length}</span></button></div></div>
             <div className="flex items-center justify-between border-b border-[#edf1f4] px-5 py-3"><p className="text-xs font-semibold uppercase tracking-[0.12em] text-[#91a0ae]">{activeDay}, 22 oct · {filteredAppointments.length} citas</p><button className="flex items-center gap-1 text-xs font-medium text-[#0c7398]">Ordenar por hora <ChevronDown /></button></div>
             <div className="divide-y divide-[#edf1f4]">
-              {filteredAppointments.map((appointment) => <AppointmentRow key={appointment.id} appointment={appointment} onStatus={updateStatus} />)}
+              {filteredAppointments.map((appointment) => <AppointmentRow key={appointment.id} appointment={appointment} onStatus={updateStatus} replacementFor={replacementFor} onReplacement={setReplacementFor} onAssign={assignReplacement} />)}
             </div>
           </section>
 
@@ -124,9 +139,10 @@ export function DentalDashboard() {
   )
 }
 
-function AppointmentRow({ appointment, onStatus }: { appointment: Appointment; onStatus: (id: number, status: AppointmentStatus) => void }) {
+function AppointmentRow({ appointment, onStatus, replacementFor, onReplacement, onAssign }: { appointment: Appointment; onStatus: (id: number, status: AppointmentStatus) => void; replacementFor: number | null; onReplacement: (id: number | null) => void; onAssign: (appointmentId: number, patient: WaitlistPatient) => void }) {
   const isCancelled = appointment.status === 'Cancelada'
-  return <div className={`appointment-row ${isCancelled ? 'appointment-cancelled' : ''}`}><div className="time-block"><strong>{appointment.time}</strong><span>{appointment.period}</span></div><div className="min-w-0 flex-1"><div className="flex flex-wrap items-center gap-2"><p className="truncate text-[15px] font-semibold text-[#213c52]">{appointment.name}</p><StatusBadge status={appointment.status} /></div><div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-[#8493a0]"><span className="flex items-center gap-1"><Phone />{appointment.phone}</span><span className="font-medium text-[#5d7182]">{appointment.type}</span><span>{appointment.detail}</span></div>{isCancelled && <div className="mt-3 flex items-center gap-2 text-xs font-medium text-[#ae6e15]"><UsersRound /> Hueco libre · 1 paciente disponible en lista de espera <button className="ml-1 underline">Ver lista</button></div>}</div><div className="flex shrink-0 items-center gap-2">{appointment.status === 'Pendiente' && <a href={whatsappUrl(appointment.phone, `Hola ${appointment.name.split(' ')[0]}, te escribimos de la Clínica Laura para confirmar tu cita de ${appointment.type} el ${appointment.day.toLowerCase()}. ¿Nos confirmas tu asistencia?`)} target="_blank" rel="noreferrer" className="whatsapp-button"><MessageCircle /> WhatsApp</a>}{appointment.status === 'Pendiente' && <Button onClick={() => onStatus(appointment.id, 'Confirmada')} size="icon" variant="outline" aria-label={`Confirmar cita de ${appointment.name}`} className="border-[#b9dfd0] text-[#2f8a68] hover:bg-[#effaf5]"><Check /></Button>}{appointment.status !== 'Cancelada' && <Button onClick={() => onStatus(appointment.id, 'Cancelada')} size="icon" variant="ghost" aria-label={`Cancelar cita de ${appointment.name}`} className="text-[#9aabb8] hover:bg-[#fff2f2] hover:text-[#cf4f4f]"><X /></Button>}{isCancelled && <Button variant="outline" size="sm" className="border-[#e2c98d] text-[#a2701a]">Buscar paciente</Button>}</div></div>
+  const showingWaitlist = replacementFor === appointment.id
+  return <div className={`appointment-row ${isCancelled ? 'appointment-cancelled' : ''}`}><div className="time-block"><strong>{appointment.time}</strong><span>{appointment.period}</span></div><div className="min-w-0 flex-1"><div className="flex flex-wrap items-center gap-2"><p className="truncate text-[15px] font-semibold text-[#213c52]">{appointment.name}</p><StatusBadge status={appointment.status} /></div><div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-[#8493a0]"><span className="flex items-center gap-1"><Phone />{appointment.phone}</span><span className="font-medium text-[#5d7182]">{appointment.type}</span><span>{appointment.detail}</span></div>{isCancelled && <div className="mt-3 flex flex-wrap items-center gap-2 text-xs font-medium text-[#ae6e15]"><UsersRound /> Hueco libre · 1 paciente disponible en lista de espera <button onClick={() => onReplacement(appointment.id)} className="ml-1 underline">Ver lista</button></div>}{showingWaitlist && <div className="mt-3 rounded-lg border border-[#eadfbc] bg-[#fffaf0] p-3"><div className="mb-2 flex items-center justify-between"><p className="text-xs font-semibold text-[#806322]">Pacientes sugeridos para {appointment.time}</p><button onClick={() => onReplacement(null)} aria-label="Cerrar lista de espera" className="text-[#9aabb8]"><X /></button></div><div className="flex flex-col gap-2">{waitlist.map((patient) => <button key={patient.id} onClick={() => onAssign(appointment.id, patient)} className="flex items-center justify-between gap-3 rounded-md border border-[#eadfbc] bg-white px-3 py-2 text-left hover:bg-[#fff5d8]"><span className="min-w-0"><strong className="block truncate text-xs text-[#27445a]">{patient.name}</strong><span className="block truncate text-[11px] text-[#8a7a58]">{patient.treatment} · {patient.reason}</span></span><span className="shrink-0 text-[11px] font-semibold text-[#a2701a]">Asignar</span></button>)}</div></div>}</div><div className="flex shrink-0 items-center gap-2">{appointment.status === 'Pendiente' && <a href={whatsappUrl(appointment.phone, `Hola ${appointment.name.split(' ')[0]}, te escribimos de la Clínica Laura para confirmar tu cita de ${appointment.type} el ${appointment.day.toLowerCase()}. ¿Nos confirmas tu asistencia?`)} target="_blank" rel="noreferrer" className="whatsapp-button"><MessageCircle /> WhatsApp</a>}{appointment.status === 'Pendiente' && <Button onClick={() => onStatus(appointment.id, 'Confirmada')} size="icon" variant="outline" aria-label={`Confirmar cita de ${appointment.name}`} className="border-[#b9dfd0] text-[#2f8a68] hover:bg-[#effaf5]"><Check /></Button>}{appointment.status !== 'Cancelada' && <Button onClick={() => onStatus(appointment.id, 'Cancelada')} size="icon" variant="ghost" aria-label={`Cancelar cita de ${appointment.name}`} className="text-[#9aabb8] hover:bg-[#fff2f2] hover:text-[#cf4f4f]"><X /></Button>}{isCancelled && <Button onClick={() => onReplacement(appointment.id)} variant="outline" size="sm" className="border-[#e2c98d] text-[#a2701a]">Buscar paciente</Button>}</div></div>
 }
 
 function StatusBadge({ status }: { status: AppointmentStatus }) { const styles = { Pendiente: 'status-pending', Confirmada: 'status-confirmed', Cancelada: 'status-cancelled' }; const label = status === 'Cancelada' ? 'Cancelada / Hueco libre' : status; return <span className={`status-badge ${styles[status]}`}>{status === 'Confirmada' && <CheckCircle2 />}{status === 'Cancelada' && <XCircle />}{status === 'Pendiente' && <Clock3 />}{label}</span> }
