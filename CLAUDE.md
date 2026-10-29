@@ -21,3 +21,5 @@ Optimizado para flujo de trabajo matutino en escritorio: reducir el 30% de inasi
 - Uso estricto de Server Components donde no se requiera interactividad y Client Components (`"use client"`) para interacción de agenda y filtros.
 - Enlaces de mensajería generados mediante `https://wa.me/{telefono}?text={mensaje}` con codificación URI (`encodeURIComponent`).
 - Nomenclatura en español para entidades de dominio (Cita, Paciente, Tratamiento) y estados consistentes (`confirmada`, `pendiente`, `cancelada`, `en-riesgo`).
+- Convenciones visuales obligatorias: WhatsApp usa verde oficial sólido `#25D366` con texto e icono blancos y hover `#20ba5a`; las tarjetas de tratamientos en riesgo son blancas con acento izquierdo rojo de 4px; los huecos libres usan borde punteado y fondo ámbar tenue.
+- Los KPIs deben usar iconos dentro de contenedores circulares con fondos pastel suaves y el header debe mostrar la fecha actual en español sin depender de una fecha fija.
