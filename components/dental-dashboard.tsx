@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useState, type FormEvent } from 'react'
 import {
   CalendarDays,
   Check,
@@ -69,6 +69,9 @@ export function DentalDashboard() {
   const [toast, setToast] = useState('')
   const [replacementFor, setReplacementFor] = useState<number | null>(null)
   const [currentDate, setCurrentDate] = useState('')
+  const [showNewPatient, setShowNewPatient] = useState(false)
+  const [waitingPatients, setWaitingPatients] = useState(waitlist)
+  const [newPatient, setNewPatient] = useState({ name: '', phone: '', treatment: 'Valoración', reason: 'Nuevo paciente' })
 
   useEffect(() => {
     setCurrentDate(new Intl.DateTimeFormat('es-MX', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }).format(new Date()))
@@ -99,6 +102,16 @@ export function DentalDashboard() {
     window.setTimeout(() => setToast(''), 2800)
   }
 
+  function addPatient(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault()
+    if (!newPatient.name.trim() || !newPatient.phone.trim()) return
+    setWaitingPatients((current) => [...current, { ...newPatient, id: Date.now() }])
+    setNewPatient({ name: '', phone: '', treatment: 'Valoración', reason: 'Nuevo paciente' })
+    setShowNewPatient(false)
+    setToast('Paciente agregado a la lista de espera')
+    window.setTimeout(() => setToast(''), 2800)
+  }
+
   return (
     <div className="min-h-screen bg-[#f6f9fc] text-[#162b40]">
       <header className="border-b border-[#dfe8f0] bg-white">
@@ -114,8 +127,18 @@ export function DentalDashboard() {
       <main className="mx-auto max-w-[1440px] px-5 py-7 lg:px-10 lg:py-9">
         <section className="mb-7 flex flex-col justify-between gap-5 md:flex-row md:items-end">
           <div><div className="mb-2 flex items-center gap-2 text-xs font-medium uppercase tracking-[0.16em] text-[#0c789e]"><Sparkles /> Resumen de la mañana</div><h1 className="text-3xl font-semibold tracking-[-0.03em] text-[#122a42] lg:text-4xl">Buenos días, Andrea</h1><p className="mt-2 text-[15px] text-[#718397]">Tu agenda está lista. Aquí tienes lo más importante para hoy.</p></div>
-          <Button onClick={syncCalendar} variant="outline" className="h-10 w-fit border-[#cddde8] bg-white text-[#22506c] hover:bg-[#f0f7fa]"><RefreshCw data-icon="inline-start" className={synced ? 'animate-spin' : ''} />{synced ? 'Sincronizado' : 'Sincronizar Google Calendar'}</Button>
+          <div className="flex flex-wrap gap-2">
+            <Button onClick={() => setShowNewPatient((current) => !current)} variant="outline" className="h-10 w-fit border-[#cddde8] bg-white text-[#22506c] hover:bg-[#f0f7fa]"><UserRound data-icon="inline-start" />Nuevo paciente</Button>
+            <Button onClick={syncCalendar} variant="outline" className="h-10 w-fit border-[#cddde8] bg-white text-[#22506c] hover:bg-[#f0f7fa]"><RefreshCw data-icon="inline-start" className={synced ? 'animate-spin' : ''} />{synced ? 'Sincronizado' : 'Sincronizar Google Calendar'}</Button>
+          </div>
         </section>
+
+        {showNewPatient && <form onSubmit={addPatient} className="mb-7 panel grid gap-4 border-[#c9e0ec] bg-white p-5 sm:grid-cols-2 lg:grid-cols-[1.3fr_1fr_1fr_auto] lg:items-end" aria-label="Registrar nuevo paciente">
+          <label className="flex flex-col gap-1.5 text-xs font-semibold text-[#526d80]">Nombre completo<input required value={newPatient.name} onChange={(event) => setNewPatient((current) => ({ ...current, name: event.target.value }))} placeholder="Ej. Laura Sánchez" className="h-10 rounded-lg border border-[#dce6ed] px-3 text-sm font-normal text-[#213c52] outline-none focus:border-[#72b5ce] focus:ring-2 focus:ring-[#d8eff7]" /></label>
+          <label className="flex flex-col gap-1.5 text-xs font-semibold text-[#526d80]">Teléfono<input required value={newPatient.phone} onChange={(event) => setNewPatient((current) => ({ ...current, phone: event.target.value }))} placeholder="+52 55 0000 0000" className="h-10 rounded-lg border border-[#dce6ed] px-3 text-sm font-normal text-[#213c52] outline-none focus:border-[#72b5ce] focus:ring-2 focus:ring-[#d8eff7]" /></label>
+          <label className="flex flex-col gap-1.5 text-xs font-semibold text-[#526d80]">Tratamiento<select value={newPatient.treatment} onChange={(event) => setNewPatient((current) => ({ ...current, treatment: event.target.value }))} className="h-10 rounded-lg border border-[#dce6ed] bg-white px-3 text-sm font-normal text-[#213c52] outline-none focus:border-[#72b5ce] focus:ring-2 focus:ring-[#d8eff7]"><option>Valoración</option><option>Limpieza dental</option><option>Endodoncia</option><option>Ortodoncia</option><option>Implante dental</option><option>Rehabilitación</option></select></label>
+          <Button type="submit" className="h-10 bg-[#0c628c] text-white hover:bg-[#095777]">Guardar paciente</Button>
+        </form>}
 
         <section className="mb-8 grid gap-4 sm:grid-cols-3">
           <button onClick={() => { setActiveDay('Mañana'); setShowTreatments(false) }} className="stat-card group border-[#c9e0ec] bg-[#edf8fc] text-left"><div className="flex items-start justify-between"><span className="stat-icon bg-white text-[#08739b]"><CalendarDays /></span><span className="text-xs font-medium text-[#5f8398]">Mañana</span></div><p className="mt-4 text-3xl font-semibold text-[#0a5f82]">{pendingTomorrow}</p><p className="mt-1 text-sm font-medium text-[#2b6681]">Por confirmar mañana</p><span className="mt-3 block text-xs text-[#6b8999] group-hover:text-[#0a5f82]">Ver citas pendientes <span aria-hidden="true">→</span></span></button>
@@ -128,7 +151,7 @@ export function DentalDashboard() {
             <div className="flex flex-col gap-4 border-b border-[#e6edf2] px-5 py-5 sm:flex-row sm:items-center sm:justify-between"><div><h2 className="text-lg font-semibold text-[#19344b]">Confirmación de agenda</h2><p className="mt-1 text-sm text-[#7b8b9b]">Envía recordatorios y actualiza estados en un clic.</p></div><div className="flex rounded-lg bg-[#f1f5f8] p-1"><button onClick={() => setActiveDay('Hoy')} className={`tab-button ${activeDay === 'Hoy' ? 'tab-active' : ''}`}>Hoy <span>{appointments.filter(a => a.day === 'Hoy').length}</span></button><button onClick={() => setActiveDay('Mañana')} className={`tab-button ${activeDay === 'Mañana' ? 'tab-active' : ''}`}>Mañana <span>{appointments.filter(a => a.day === 'Mañana').length}</span></button></div></div>
             <div className="flex items-center justify-between border-b border-[#edf1f4] px-5 py-3"><p className="text-xs font-semibold uppercase tracking-[0.12em] text-[#91a0ae]">{activeDay}, 22 oct · {filteredAppointments.length} citas</p><button className="flex items-center gap-1 text-xs font-medium text-[#0c7398]">Ordenar por hora <ChevronDown /></button></div>
             <div className="divide-y divide-[#edf1f4]">
-              {filteredAppointments.map((appointment) => <AppointmentRow key={appointment.id} appointment={appointment} onStatus={updateStatus} replacementFor={replacementFor} onReplacement={setReplacementFor} onAssign={assignReplacement} />)}
+              {filteredAppointments.map((appointment) => <AppointmentRow key={appointment.id} appointment={appointment} onStatus={updateStatus} replacementFor={replacementFor} onReplacement={setReplacementFor} onAssign={assignReplacement} patients={waitingPatients} />)}
             </div>
           </section>
 
@@ -144,10 +167,10 @@ export function DentalDashboard() {
   )
 }
 
-function AppointmentRow({ appointment, onStatus, replacementFor, onReplacement, onAssign }: { appointment: Appointment; onStatus: (id: number, status: AppointmentStatus) => void; replacementFor: number | null; onReplacement: (id: number | null) => void; onAssign: (appointmentId: number, patient: WaitlistPatient) => void }) {
+function AppointmentRow({ appointment, onStatus, replacementFor, onReplacement, onAssign, patients }: { appointment: Appointment; onStatus: (id: number, status: AppointmentStatus) => void; replacementFor: number | null; onReplacement: (id: number | null) => void; onAssign: (appointmentId: number, patient: WaitlistPatient) => void; patients: WaitlistPatient[] }) {
   const isCancelled = appointment.status === 'Cancelada'
   const showingWaitlist = replacementFor === appointment.id
-  return <div className={`appointment-row ${isCancelled ? 'appointment-cancelled' : ''}`}><div className="time-block"><strong>{appointment.time}</strong><span>{appointment.period}</span></div><div className="min-w-0 flex-1"><div className="flex flex-wrap items-center gap-2"><p className="truncate text-[15px] font-semibold text-[#213c52]">{appointment.name}</p><StatusBadge status={appointment.status} /></div><div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-[#8493a0]"><span className="flex items-center gap-1"><Phone />{appointment.phone}</span><span className="font-medium text-[#5d7182]">{appointment.type}</span><span>{appointment.detail}</span></div>{isCancelled && <div className="mt-3 flex flex-wrap items-center gap-2 text-xs font-medium text-[#ae6e15]"><UsersRound /> Hueco libre · 1 paciente disponible en lista de espera <button onClick={() => onReplacement(appointment.id)} className="waitlist-trigger ml-1 rounded-md px-2 py-1 underline">Asignar paciente en espera</button></div>}{showingWaitlist && <div className="mt-3 rounded-lg border border-[#eadfbc] bg-[#fffaf0] p-3"><div className="mb-2 flex items-center justify-between"><p className="text-xs font-semibold text-[#806322]">Pacientes sugeridos para {appointment.time}</p><button onClick={() => onReplacement(null)} aria-label="Cerrar lista de espera" className="text-[#9aabb8]"><X /></button></div><div className="flex flex-col gap-2">{waitlist.map((patient) => <button key={patient.id} onClick={() => onAssign(appointment.id, patient)} className="flex items-center justify-between gap-3 rounded-md border border-[#eadfbc] bg-white px-3 py-2 text-left hover:bg-[#fff5d8]"><span className="min-w-0"><strong className="block truncate text-xs text-[#27445a]">{patient.name}</strong><span className="block truncate text-[11px] text-[#8a7a58]">{patient.treatment} · {patient.reason}</span></span><span className="shrink-0 text-[11px] font-semibold text-[#a2701a]">Asignar</span></button>)}</div></div>}</div><div className="flex shrink-0 items-center gap-2">{appointment.status === 'Pendiente' && <a href={whatsappUrl(appointment.phone, `Hola ${appointment.name.split(' ')[0]}, te escribimos de la Clínica Laura para confirmar tu cita de ${appointment.type} el ${appointment.day.toLowerCase()}. ¿Nos confirmas tu asistencia?`)} target="_blank" rel="noreferrer" className="whatsapp-button"><MessageCircle /> WhatsApp</a>}{appointment.status === 'Pendiente' && <Button onClick={() => onStatus(appointment.id, 'Confirmada')} size="icon" variant="outline" aria-label={`Confirmar cita de ${appointment.name}`} className="border-[#b9dfd0] text-[#2f8a68] hover:bg-[#effaf5]"><Check /></Button>}{appointment.status !== 'Cancelada' && <Button onClick={() => onStatus(appointment.id, 'Cancelada')} size="icon" variant="ghost" aria-label={`Cancelar cita de ${appointment.name}`} className="text-[#9aabb8] hover:bg-[#fff2f2] hover:text-[#cf4f4f]"><X /></Button>}{isCancelled && <Button onClick={() => onReplacement(appointment.id)} variant="outline" size="sm" className="border-[#e2c98d] text-[#a2701a]">Buscar paciente</Button>}</div></div>
+  return <div className={`appointment-row ${isCancelled ? 'appointment-cancelled' : ''}`}><div className="time-block"><strong>{appointment.time}</strong><span>{appointment.period}</span></div><div className="min-w-0 flex-1"><div className="flex flex-wrap items-center gap-2"><p className="truncate text-[15px] font-semibold text-[#213c52]">{appointment.name}</p><StatusBadge status={appointment.status} /></div><div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-[#8493a0]"><span className="flex items-center gap-1"><Phone />{appointment.phone}</span><span className="font-medium text-[#5d7182]">{appointment.type}</span><span>{appointment.detail}</span></div>{isCancelled && <div className="mt-3 flex flex-wrap items-center gap-2 text-xs font-medium text-[#ae6e15]"><UsersRound /> Hueco libre · 1 paciente disponible en lista de espera <button onClick={() => onReplacement(appointment.id)} className="waitlist-trigger ml-1 rounded-md px-2 py-1 underline">Asignar paciente en espera</button></div>}{showingWaitlist && <div className="mt-3 rounded-lg border border-[#eadfbc] bg-[#fffaf0] p-3"><div className="mb-2 flex items-center justify-between"><p className="text-xs font-semibold text-[#806322]">Pacientes sugeridos para {appointment.time}</p><button onClick={() => onReplacement(null)} aria-label="Cerrar lista de espera" className="text-[#9aabb8]"><X /></button></div><div className="flex flex-col gap-2">{patients.map((patient) => <button key={patient.id} onClick={() => onAssign(appointment.id, patient)} className="flex items-center justify-between gap-3 rounded-md border border-[#eadfbc] bg-white px-3 py-2 text-left hover:bg-[#fff5d8]"><span className="min-w-0"><strong className="block truncate text-xs text-[#27445a]">{patient.name}</strong><span className="block truncate text-[11px] text-[#8a7a58]">{patient.treatment} · {patient.reason}</span></span><span className="shrink-0 text-[11px] font-semibold text-[#a2701a]">Asignar</span></button>)}</div></div>}</div><div className="flex shrink-0 items-center gap-2">{appointment.status === 'Pendiente' && <a href={whatsappUrl(appointment.phone, `Hola ${appointment.name.split(' ')[0]}, te escribimos de la Clínica Laura para confirmar tu cita de ${appointment.type} el ${appointment.day.toLowerCase()}. ¿Nos confirmas tu asistencia?`)} target="_blank" rel="noreferrer" className="whatsapp-button"><MessageCircle /> WhatsApp</a>}{appointment.status === 'Pendiente' && <Button onClick={() => onStatus(appointment.id, 'Confirmada')} size="icon" variant="outline" aria-label={`Confirmar cita de ${appointment.name}`} className="border-[#b9dfd0] text-[#2f8a68] hover:bg-[#effaf5]"><Check /></Button>}{appointment.status !== 'Cancelada' && <Button onClick={() => onStatus(appointment.id, 'Cancelada')} size="icon" variant="ghost" aria-label={`Cancelar cita de ${appointment.name}`} className="text-[#9aabb8] hover:bg-[#fff2f2] hover:text-[#cf4f4f]"><X /></Button>}{isCancelled && <Button onClick={() => onReplacement(appointment.id)} variant="outline" size="sm" className="border-[#e2c98d] text-[#a2701a]">Buscar paciente</Button>}</div></div>
 }
 
 function StatusBadge({ status }: { status: AppointmentStatus }) { const styles = { Pendiente: 'status-pending', Confirmada: 'status-confirmed', Cancelada: 'status-cancelled' }; const label = status === 'Cancelada' ? 'Cancelada / Hueco libre' : status; return <span className={`status-badge ${styles[status]}`}>{status === 'Confirmada' && <CheckCircle2 />}{status === 'Cancelada' && <XCircle />}{status === 'Pendiente' && <Clock3 />}{label}</span> }
